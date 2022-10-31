@@ -1,0 +1,181 @@
+---
+title: "Ba -Assignment"
+author: "TILAK KUMAR BONALA"
+date: "2022-10-31"
+output: pdf_document
+---
+---
+#title: "BA-assgn2"
+# "TILAK KUMAR BONALA"
+#date: "2022-10-30"
+---
+
+```{r}
+
+Online_data = read.csv("C://Users//Hello//Desktop//BA//assignment3//Online_Retail.csv")
+View(Online_data)
+library(zoo)
+```
+#Question 1
+#Show the breakdown of the number of transactions by countries i.e. how many transactions are in the dataset for each country in total number and also in percentage. Show only countries acco unting for more than 1% of the total transactions.
+```{r}
+Totaltransactions <- table(Online_data$Country)
+transaction_percentage <- round(100*prop.table(Totaltransactions))
+percentage <- cbind(Totaltransactions, transaction_percentage)
+Transaction_table <- subset(percentage, transaction_percentage >1)
+Transaction_table
+```
+```{r}
+#Question 2
+#Creating  a  new  variable  ‘T_Value’   for value of the transaction to product  of existing  ‘Quantity’  and  UnitPrice’ variables. Add this variable to the dataframe.
+library(dplyr)
+```
+```{r}
+T_value <- Online_data$Quantity * Online_data$UnitPrice
+Online_data <- Online_data %>% mutate(T_value)
+summary(Online_data$T_value)
+```
+```{r}
+#Question 3
+#Using the newly created variable, TransactionValue, show the breakdown of 
+#transaction values by countries i.e. how much money in total has been spent each 
+#country. Show this in total sum of transaction values. Show only countries with
+#total transaction exceeding 130,000 British Pound.
+data <- summarise(group_by(Online_data, Country), sum1 = sum(T_value))
+Transaction <- filter(data, sum1>130000)
+Transaction
+```
+```{r}
+#question 4
+Time=strptime(Online_data$InvoiceDate,format='%m/%d/%Y %H:%M',tz='GMT')
+head(Time)
+```
+```{r}
+Online_data$New_Invoice_Date <- as.Date(Time)
+Online_data$New_Invoice_Date[20000]-Online_data$New_Invoice_Date[10]
+## Time difference of 8 days
+Online_data$Invoice_Day_Week= weekdays(Online_data$New_Invoice_Date)
+Online_data$New_Invoice_Hour = as.numeric(format(Time, "%H"))
+Online_data$New_Invoice_Month = as.numeric(format(Time, "%m"))
+```
+```{r}
+#question 4 a) Percentage of transactions in days of the week
+Table<-summarise(group_by(Online_data,Invoice_Day_Week),T_value=n_distinct(InvoiceNo))
+Table1<-mutate(Table, transaction_percent=(T_value/sum(T_value))*100)
+Table1
+```
+```{r}
+#question 4 b: percentage  of volume of   transactions  
+Table_4b<-summarise(group_by(Online_data,Invoice_Day_Week),T_Volume=sum(T_value))
+Table_4b1<-mutate(Table_4b,percentage=(T_Volume/sum(T_Volume))*100)
+Table_4b1
+```
+```{r}
+# Question 4 c) Show the percentage of volume of transactions in  month of the year
+Table_c1<-summarise(group_by(Online_data,New_Invoice_Month),T_Volume=sum(T_value))
+Table_c2<-mutate(Table_c1,percentage=(T_Volume/sum(T_Volume))*100)
+Table_c2
+```
+```{r}
+# Question 4 d) What was the date with the highest number of transactions from Australia? 
+
+Online_data <- Online_data %>% mutate(T_value= Quantity * UnitPrice)
+Online_data %>% filter(Country == 'Australia') %>% group_by(New_Invoice_Date) %>% summarise(max=max(T_value))
+```
+````{r}
+#e) The company needs to shut down the website for two consecutive hours for maintenance. 
+#What would be the hour of the day to start this so that the distribution is at minimum for the customers? The responsible IT team is available from 7:00 to 20:00 every day. 
+
+data_e1<-summarise(group_by(Online_data,New_Invoice_Hour),Transaction_min=n_distinct(InvoiceNo))
+data_e1<-filter(data_e1,New_Invoice_Hour>=7&New_Invoice_Hour<=20)
+data_e2<-rollapply(data_e1$Transaction_min,3,sum)
+data_e3<-which.min(data_e2)
+data_e3
+```
+```{r}
+#Question5
+#Ploting the histogram of transaction values from Germany by using the hist() function to plot. 
+Germany_data <- subset(Online_data$T_value, Online_data$Country == "Germany")
+hist(Germany_data, xlab = "Transaction Values of Germany", main = "Germany")
+
+```
+```{r}
+#Question 6
+#Finding Which customer had the highest number of transactions? Which customer is most valuable (i.e. highest total sum of transactions)?
+Online_data1 <- na.omit(Online_data)
+result_data1 <- summarise(group_by(Online_data1,CustomerID), sum2= sum(T_value))
+result_data1[which.max(result_data1$sum2),]
+```
+```{r}
+data_2 <- table(Online_data$CustomerID)
+data_2 <- as.data.frame(data_2)
+result_data2 <- data_2[which.max(data_2$Freq),]
+result_data2
+```
+```{r}
+#Question 7
+#Calculate  the  percentage  of  missing  values  for  each  variable  in  the  dataset 
+missing_values_data <- colMeans(is.na(Online_data)*100)
+missing_values_data
+```
+```{r}
+#Question 8
+#The number of transactions with missing CustomerID records by countries 
+Online_data2 <- Online_data %>% filter(is.na(CustomerID)) %>% group_by(Country)
+summary(Online_data2$Country)
+```
+```{r}
+#Question 9
+#On average the costumers comeback to the website for their next shopping? #(i.e. what is  the  average  number  of  days  between  consecutive  shopping)
+Online_NA_removed <- na.omit(Online_data)
+Online_NA_removed <- subset(Online_NA_removed, Quantity > 0)
+Online_subset <- Online_NA_removed[,c("CustomerID","New_Invoice_Date")]
+Online_subset_distinct <- distinct(Online_subset)
+Online_subset_distinct %>% 
+group_by(CustomerID) %>% 
+arrange(New_Invoice_Date)%>% 
+summarise(avg= mean(diff(New_Invoice_Date))) %>% 
+na.omit()%>%
+summarise(avg_days_between_shopping = mean(avg))
+```
+#The customers come back after on an average of 78 days after shopping. 
+
+```{r}
+#Question 10
+#what is the return rate for the French customers? 
+#A) Consider the cancelled transactions as those where the ‘Quantity’ 
+#variable has a negative value. 
+Online_table <- filter(Online_data,Country=="France")
+total_row <- nrow(Online_table)
+cancelled_transactions <- nrow(subset(Online_table,T_value<0))
+cancelled_transactions
+## [1] 149
+notcancel <- total_row- cancelled_transactions
+notcancel
+## [1] 8408
+Q_10 =(cancelled_transactions/8408)*100
+Q_10
+```
+```{r}
+#Question11
+# The product that has generated the highest revenue for the retailer? . 
+T_value <- tapply(Online_data$T_value, Online_data$StockCode , sum)
+T_value[which.max(T_value)]
+```
+```{r}
+#Question12
+#unique customers are represented by using unique() and length() functions. 
+unique_customers <- unique(Online_data$CustomerID)
+length(unique_customers)
+```
+
+```{r cars}
+summary(cars)
+```
+
+
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
