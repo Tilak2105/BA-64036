@@ -1,0 +1,122 @@
+---
+title: "Untitled"
+author: "TILAK KUMAR BONALA"
+date: "2022-11-13"
+output:
+  pdf_document: default
+  html_document: default
+---
+#install.packages("mlbench")
+```{r}
+#1.	Run the following code in R-studio to create two variables X and Y.
+set.seed(2017)
+X=runif(100)*10
+Y=X*4+3.45
+Y=rnorm(100)*0.29*Y+Y
+```
+
+```{r}
+plot(Y~X)
+
+```
+#b)	Construct a simple linear model of Y based on X.
+```{r}
+tab <- lm(Y ~ X)
+summary(tab)
+```
+
+```{r}
+#Y=4.4655+3.6108*X
+#Accuracy is 0.6517 or 65%
+```
+#c)	How the Coefficient of Determination R^2, of the model above is related to the correlation
+
+```{r}
+#Coefficient of Determination= (Correlation Coefficient)2
+cor(X,Y)^2
+summary(tab)
+```
+#(c)Ans: Coefficiemt of R^2 is equal to The square of relationship coefficient is same as coefficient of determination 65.17% 
+
+#2.We  will  use  the  ‘mtcars’  dataset  for  this  question.  The  dataset  is  already  included  in  your  R  distribution. The dataset shows some of the characteristics of different cars. The following shows few samples (i.e. the first 6 rows) of the dataset. The description of the dataset can be found here. 
+ 
+```{r}
+head(mtcars)
+```
+
+#Building a model based on James estimation:
+```{r}
+plot(mtcars$hp~mtcars$wt)
+james_model<-lm(formula =hp~wt, data = mtcars )
+summary(james_model)
+```
+#Building a model based on Chris estimation:
+```{r}
+plot(mtcars$hp~mtcars$mpg)
+chris_Model<-lm(formula =hp~mpg, data = mtcars )
+summary(chris_Model)
+```
+#Conclusion:According to the results we get to know that chris has accuracy rate of 60.24 where as james as an accuracy rate of 43.39,as the accuracy rate is high for chris, he's estimation is correct.`
+
+
+#2.b) Build a model that uses the number of cylinders (cyl) and the mile per gallon (mpg) values of a car to predict the car Horse Power (hp). Using this model, what is the estimated Horse Power of a car with 4 calendar and mpg of 22?
+```{r}
+Model2<-lm(hp~cyl+mpg,data = mtcars)
+summary(Model2)
+estimated_HP<-predict(Model2,data.frame(cyl=4,mpg=22))
+estimated_HP
+predict(Model2,data.frame(cyl=4,mpg=22),interval = "prediction",level = 0.85)
+```
+#therefore, estimated horse power is 88.93618.
+
+#3. For this question, we are going to use BostonHousing dataset. The dataset is in ‘mlbench’ package, so we first need to instal the package, call the library and the load the dataset using the following commands 
+
+```{r}
+#install.packages('mlbench')
+library(mlbench)
+data(BostonHousing)
+
+```
+
+#a) Build a model to estimate the median value of owner-occupied homes (medv)based on the following  variables:  crime  crate  (crim),  proportion  of  residential  land  zoned  for  lots  over  25,000  sq.ft  (zn),  the  local  pupil-teacher  ratio  (ptratio)  and  weather  the  whether  the  tract  bounds Chas River(chas). Is this an accurate model?
+
+```{r}
+set.seed(123)
+Model3<-lm(medv~crim+zn+ptratio+chas,data = BostonHousing)
+summary(Model3)
+```
+#as the multiple-R-squared value is 0.3599 which is 36% nearly, it is not good model.
+
+#b) Use the estimated coefficient to answer these questions?   
+ 
+# Imagine two houses that are identical in all aspects but one bounds the Chas River and the other does not. Which one is more expensive and by how much? 
+
+#The coefficient is 4.58393, indicates that the houses that bounds by the Chas river are 4.58393 times more expensive than the houses which do not bounds by the river.
+
+#Moreover, the values of chas river are 1 or 0 which means the houses which bound by the river are assigned a value of 1, orelse 0. So for the houses which do not bound by the river are going to have 0 times change in their value.
+
+
+#(c) Finding which of the variables are statistically important:**
+
+#All the variables including crime rate,proportion of residential land zoned for lots over 25,000 sq.ft,the local pupil-teacher ratio,the tract bounds Chas River are statistically important as all of them has very low P value
+
+ 
+ 
+#(d)Determining the order of importance of the 4 variables using ANOVA analysis:**
+
+```{r}
+anova_lm<-anova(Model3)
+anova_lm
+```
+*The importance of variables can be determined by their Sum of Squares value. Higher the Sum of squares, the more important is the variable in estimating the value of a dependent variable*
+
+#Order of importance of variables:
+
+#crime rate by town=6440.8
+
+#pupil-teacher ratio by town=3554.3
+
+# residential land zoned for lots over 25,000 sq.ft.=4709.5
+
+#Charles River dummy variable=667.2
+
